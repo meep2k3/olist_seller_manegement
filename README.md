@@ -17,7 +17,6 @@
 The project follows a **Hybrid ETL/ELT** architecture to transform raw transactional data into actionable insights.
 
 ![Architecture Diagram](https://via.placeholder.com/800x400?text=Insert+Architecture+Diagram+Here)
-*(Please insert your Architecture/ERD Diagram here)*
 
 ### 1. Data Engineering Pipeline
 * **Source:** 9 Raw CSV tables (Olist Public Dataset).
@@ -66,7 +65,6 @@ Used **K-Means Clustering** (K=7) to segment sellers based on behavior (`Product
 By combining **Performance Score** vs. **Seller Persona**, we propose the following strategies:
 
 ![Seller Heatmap](https://via.placeholder.com/800x400?text=Insert+Seller+Matrix+Heatmap)
-*(Please insert your Heatmap/Boxplot from the notebook here)*
 
 | Segment | Strategy |
 | :--- | :--- |
