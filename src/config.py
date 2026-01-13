@@ -11,7 +11,7 @@ DB_CONFIG = {
     'port': os.getenv('DB_PORT', '5432'),
     'database': os.getenv('DB_NAME', 'olist_db'),
     'user': os.getenv('DB_USER', 'postgres'),
-    'password': os.getenv('DB_PASSWORD', 'hotboyche10')
+    'password': os.getenv('DB_PASSWORD', 'YOUR_DB_PASSWORD')
 }
 
 # Tạo Connection string
