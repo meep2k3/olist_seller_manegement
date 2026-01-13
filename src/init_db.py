@@ -12,7 +12,7 @@ from psycopg2 import sql
 DB_CONFIG = {
     "dbname": "olist_db",
     "user": "postgres",
-    "password": "hotboyche10",
+    "password": "YOUR_DB_PASSWORD",
     "host": "localhost",
     "port": 5432,
 }
@@ -223,3 +223,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
