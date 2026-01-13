@@ -54,7 +54,7 @@ def clean_reviews():
     print(f"  Số dòng ban đầu: {len(df):,}")
 
     # Ép kiểu dữ liệu
-    df['review_score'] = pd.to_numeric(df['review_score'], errors='coerce') # .astype('Int64') nếu cần, nhưng float ok cho SQL
+    df['review_score'] = pd.to_numeric(df['review_score'], errors='coerce') 
     df['review_creation_date'] = pd.to_datetime(df['review_creation_date'], errors='coerce')
     df['review_answer_timestamp'] = pd.to_datetime(df['review_answer_timestamp'], errors='coerce')
 
@@ -206,8 +206,8 @@ def run_cleaning():
     stats['payments'] = copy_raw_to_staging('payments', 'payments_cleaned')
     stats['translation'] = copy_raw_to_staging('product_category_name_translation', 'product_category_name_translation')
     
-    # Nhóm Xử lý Logic Phức tạp (Type casting + Deduplication + Business Rules)
-    stats['order_items'] = clean_order_items() # Đã thêm hàm này
+    # Nhóm Xử lý Logic Phức tạp 
+    stats['order_items'] = clean_order_items() 
     stats['orders'] = clean_orders()
     stats['products'] = clean_products()
     stats['reviews'] = clean_reviews()
