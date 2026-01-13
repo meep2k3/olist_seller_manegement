@@ -89,7 +89,8 @@ Olist_Project/
 │   ├── config.py           # Database configurations
 │   ├── data_cleaning.py    # Staging logic
 │   ├── data_transformation.py # Warehousing logic (Star Schema)
-│   └── data_aggregation.py # Aggregation logic
+|   ├── data_aggregation.py # Aggregation logic
+│   └── init_db 
 │
 ├── images/                 # Diagrams and Charts for README
 ├── requirements.txt        # Python Dependencies
