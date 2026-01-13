@@ -39,7 +39,7 @@ def create_agg_daily_sales():
                 fo.order_purchase_timestamp::date as date,
                 SUM(fo.total_amount) as revenue,
                 COUNT(DISTINCT fo.order_id) as orders,
-                -- SỬA: Đếm người dùng thực tế (Unique ID) thay vì customer_id đơn thuần
+                -- Đếm người dùng thực tế (Unique ID) thay vì customer_id đơn thuần
                 COUNT(DISTINCT c.customer_unique_id) as customers
             FROM warehouse.fact_orders fo
             JOIN warehouse.dim_customers c ON fo.customer_id = c.customer_id
