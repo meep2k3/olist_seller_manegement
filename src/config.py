@@ -86,3 +86,8 @@ BUSINESS_RULES = {
     'min_delivery_days': 0,
     'max_delivery_days': 365
 }
+
+# Google cloud config
+GCP_KEY_PATH = os.path.join(os.path.dirname(__file__), 'D:/do_an/Olist_seller_management/gcp_key.json')
+GCS_BUCKET_NAME = 'olist-seller-evaluation'
+GCS_FOLDER_PATH = 'seller_reports/'
