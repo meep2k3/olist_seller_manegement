@@ -1,104 +1,104 @@
-# Olist E-commerce: End-to-End Data Pipeline & Seller Strategy
+# Olist E-commerce: Seller Management & Data Pipeline Solution
 
 ![Python](https://img.shields.io/badge/Python-3.8%2B-blue?logo=python&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14%2B-elephant?logo=postgresql&logoColor=white)
-![Google Cloud](https://img.shields.io/badge/Google_Cloud-Storage-4285F4?logo=google-cloud&logoColor=white)
+![Google Cloud](https://img.shields.io/badge/Google_Cloud-Storage_%26_BigQuery-4285F4?logo=google-cloud&logoColor=white)
+![Looker Studio](https://img.shields.io/badge/Looker-Studio-EA4335?logo=looker&logoColor=white)
 ![Scikit-Learn](https://img.shields.io/badge/Sklearn-Machine%20Learning-orange?logo=scikitlearn&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-green.svg)
 
-## 📖 Executive Summary
-**Olist** operates as a B2B2C marketplace connector in Brazil, linking small merchants (Sellers) to major e-commerce platforms. 
-* **The Problem:** As a marketplace without direct inventory control, Olist's brand reputation relies entirely on the performance of third-party sellers. Bad sellers lead to customer churn.
-* **The Solution:** This project builds a **Data Pipeline (ETL)** and a **Seller Management System** powered by Machine Learning (NLP & Clustering) to assess, segment, and strategically manage seller partnerships.
+## 1. Problem Statement
 
----
+### 1.1. Context
+This project focuses on **Olist Store**, a B2B2C (Business-to-Business-to-Consumer) e-commerce model in Brazil. Olist acts as a connector, linking small merchants (Sellers) to major e-commerce marketplaces, enabling them to reach customers on a national scale.
 
-## 🏗️ System Architecture
-
-The project follows a **Hybrid ETL/ELT** architecture to transform raw transactional data into actionable insights, culminating in cloud-based storage.
-
-![Architecture Diagram](https://via.placeholder.com/800x400?text=Insert+Architecture+Diagram+Here)
-
-### 1. Data Engineering Pipeline
-* **Source:** 9 Raw CSV tables (Olist Public Dataset).
-* **Staging Layer (Python):** * Data cleaning, type casting, and deduplication.
-    * Handling NULL values using median/mode imputation.
-* **Data Warehouse (PostgreSQL):** * Transformation from **OLTP** to **OLAP (Star Schema)**.
-    * Creation of Fact tables (`fact_orders`) and Dimension tables (`dim_sellers`, `dim_products`).
-* **Cloud Integration (GCP):** * Processed reports and evaluation scores are securely uploaded to **Google Cloud Storage** for archival and downstream access.
-
-### 2. Tech Stack
-* **Language:** Python 3.x
-* **Database:** PostgreSQL
-* **Cloud Storage:** Google Cloud Platform (GCS)
-* **Data Processing:** Pandas, NumPy, SQLAlchemy.
-* **Machine Learning:** Scikit-learn (K-Means, Random Forest, PCA), NLTK (LDA Topic Modeling).
-* **Visualization:** Matplotlib, Seaborn.
+### 1.2. Pain Point
+Olist's business model relies entirely on the **quality of its Sellers**, as it does not own the inventory.
+* **The Issue:** If a Seller ships late, packs poorly, or cancels orders, customer satisfaction drops, directly impacting Olist's brand reputation.
+* **The Challenge:** There is a need for an automated system to fairly evaluate, classify, and manage thousands of Sellers, replacing inefficient manual control methods.
 
 ---
 
-## 🔄 Data Flow & Pipeline Workflow
+## 2. Solution Approach
 
-This project processes data through five distinct stages to ensure data quality and analytical depth:
-
-### Step 1: Ingestion & Staging (Python)
-* **Input:** Raw CSV files (Orders, Customers, Products, Reviews, etc.).
-* **Process:** Python scripts validate schema, handle missing data (Imputation), and remove duplicates.
-* **Output:** Cleaned DataFrames pushed to the **Staging Schema** in PostgreSQL.
-
-### Step 2: Warehousing & Transformation (SQL/PostgreSQL)
-* **Process:** SQL logic transforms normalized data (3NF) into a **Star Schema** optimized for analytics.
-* **Modeling:** * **Fact:** `fact_orders` (Transactional metrics).
-    * **Dimensions:** `dim_sellers`, `dim_products`, `dim_customers`, `dim_date`.
-* **Integration:** NLP analysis results on reviews are materialized back into the warehouse (`warehouse.nlp_bad_review`).
-
-### Step 3: Advanced Analytics (Machine Learning)
-* **Voice of Customer:** `nlp_analysis.ipynb` fetches review data to perform Topic Modeling (LDA), identifying reasons for negative feedback (Logistics vs. Product).
-* **Seller Scoring:** `seller_management.ipynb` aggregates performance metrics (RFM, Delivery Time) and applies the "Fair Scoring Engine".
-
-### Step 4: Segmentation (Clustering)
-* **Process:** K-Means algorithm groups sellers based on behavioral attributes (Product weight, Category diversity).
-* **Output:** Sellers are classified into personas (e.g., *Local Lightweights, National Heavyweights*).
-
-### Step 5: Cloud Load (Google Cloud Storage)
-* **Action:** The final `Seller Evaluation Report` (containing Scores + Segments + Actionable Recommendations) is generated as a CSV.
-* **Storage:** The system securely uploads this report to a **Google Cloud Storage Bucket** (`gs://olist-seller-evaluation/`) using Service Account authentication.
+The project approaches the problem through two key pillars:
+1.  **Voice of Customer (NLP):** Leveraging Natural Language Processing to analyze review content, distinguishing between dissatisfaction caused by **Logistics** vs. **Product/Seller** issues.
+2.  **Seller Scoring & Segmentation:** Building a Data Mining process to score performance and cluster seller personas, leading to specific governance strategies.
 
 ---
 
-## 🔍 Key Modules & Analysis
+## 3. Implementation Details
 
-### Module 1: Voice of Customer (NLP Analysis)
-**Objective:** Understand the root causes of negative reviews (1-2 stars) to verify business problems.
-* **Technique:** Latent Dirichlet Allocation (LDA) for Topic Modeling.
-* **Key Findings:**
-    * **75%** of negative feedback is related to **Product Quality**.
-    * **25%** is related to **Logistics/Shipping Delays**.
-* **Conclusion:** Validated the hypothesis that rigorous Seller Quality Control is essential.
+### 3.1. System Architecture & Data Pipeline
 
-### Module 2: Seller Management System (Core)
-Developed a comprehensive system to evaluate sellers not just by sales volume, but by a combination of **Performance** and **Persona**.
 
-#### A. The "Fair" Scoring Engine
-Ensure fairness by removing factors outside the seller's control before scoring:
-* **Ghost Seller Filtering:** Removed inactive sellers based on operation time and order count.
-* **NLP Review Filtering:** Excluded 1-star reviews caused by *Shipping/Logistics* (detected via NLP), ensuring sellers aren't penalized for delivery partner errors.
-* **Feature Importance:** Used **Random Forest** to identify `Late_shipment_rate` and `GMV` as the top drivers for seller scores.
+**Workflow:**
+`9 Raw CSV Files` → `Staging (PostgreSQL)` → `Data Warehouse / Star Schema (PostgreSQL)` → `Google Cloud Storage (Backup)` → `BigQuery (Analytics)` → `Looker Studio (Dashboard)`
 
-#### B. Seller Profiling (Clustering)
-Used **K-Means Clustering** (K=7) to segment sellers based on behavior (`Product Weight`, `Category Diversity`, `Geographic Reach`).
-* **Identified Personas:**
-    * 🧊 **The Local Lightweights:** Sellers with low-cost, light items serving local regions (Dominant group).
-    * 🏗 **The National Heavyweights:** Sellers shipping bulky/heavy items nationwide.
-    * 💎 **High-Ticket Niche:** Sellers with high average order value but lower volume.
+* **Ingestion Strategy:** Full Load (Truncate & Load) to ensure data consistency during the development phase.
 
-#### C. Strategic Matrix (Results)
-By combining **Performance Score** vs. **Seller Persona**, we propose the following strategies:
+### 3.2. Data Cleaning & Standardization
+Raw data undergoes rigorous processing before entering the Database:
+* **Reviews:**
+    * *Deduplication:* Kept only the most recent review for each order.
+    * *Missing Values:* Replaced NaNs with empty strings.
+* **Orders:**
+    * *Status Filtering:* Kept only valid orders based on `BUSINESS_RULES` (delivered, shipped, etc.).
+    * *Logic Validation:* Removed erroneous records (e.g., Purchase Date > Delivery Date, Estimated Date < Purchase Date).
+* **Products:**
+    * *Imputation:* Filled 'unknown' for missing categories; 0 for missing descriptions; Median values for missing dimensions/weight.
 
-![Seller Heatmap](https://via.placeholder.com/800x400?text=Insert+Seller+Matrix+Heatmap)
+### 3.3. Data Modeling
+Transformed data into a **Star Schema** optimized for analytical queries:
+* **Fact Tables:** `fact_orders` (Transactional info), `fact_order_items` (Product details - Bridge Table).
+* **Dimension Tables:** `dim_date`, `dim_customers`, `dim_products`, `dim_sellers`.
 
-| Segment | Strategy |
-| :--- | :--- |
-| **High Performing + National Heavyweights** | **Partnership:** Offer subsidized shipping rates for heavy cargo to maintain loyalty. |
-| **High Ticket Niche** | **VIP Support:** Prioritize insurance and dedicated support, as churn here causes high revenue loss. |
-| **Low Performing (High Late Rate)** | **Action:** Recommend account suspension or probation if scores drop below threshold. |
+### 3.4. NLP Analysis (Topic Modeling)
+Utilized **LDA (Latent Dirichlet Allocation)** to uncover hidden themes in ~98,500 reviews.
+* **Distribution:** ~15% Negative (1-2 stars), ~76% Positive, remainder Neutral.
+* **Preprocessing:** Lowercase conversion, Special Character/Number removal, Tokenization, Stop Word removal (Portuguese).
+* **LDA Training:** Vectorization, filtering words appearing too frequently (>90%) or too rarely (<25%).
+* **Key Findings:** Identified 4 main complaint topics:
+    1.  Late delivery / Item not received.
+    2.  Wrong item sent / Missing parts.
+    3.  Poor product quality.
+    4.  Defective product / Return request.
+
+### 3.5. Seller Evaluation & Classification System (Core Module)
+
+#### 3.5.1. Fairness Engine (Noise & Bias Filtering)
+To ensure fair evaluation for Sellers, the system applies the following filters:
+1.  **Ghost Seller Filter:** Retained only Sellers active > 60 days, with orders in the last 180 days, and total orders > 2. (Reduced Seller count from 2,986 to 2,018).
+2.  **Logistics Bias Removal:** Used NLP to exclude 1-3 star reviews where the fault lay with the shipping carrier, not the Seller.
+
+> **Bias Filtering Efficiency:**
+> * Total Negative Reviews: 24,612
+> * Reviews Removed (Logistics Fault): **4,449** (Accounted for 18.1% of negative reviews).
+> -> *Result: Seller scores reflect actual operational capability.*
+
+#### 3.5.2. Seller Scoring
+Adopted a **Hybrid Approach** combining Unsupervised and Supervised Learning:
+1.  **Labeling:** Used **K-Means (k=4)** to cluster Sellers based on RFM and operational performance to create synthetic labels.
+2.  **Feature Importance:** Used **Random Forest** to learn from K-Means labels and determine the weight of each metric:
+    * *Rating (0.3288)* > *GMV (0.2478)* > *Orders (0.2281)* > *Late Rate (0.1142)* > *Prep Time (0.0812)*.
+3.  **Final Score Calculation:** Applied a weighted formula on MinMax scaled data to generate a 0-100 score.
+    * **Ranking:** Platinum, Gold, Silver, Bronze.
+
+#### 3.5.3. Seller Segmentation
+Used **Hierarchical Clustering** to define Seller Personas based on product characteristics:
+* *Features:* Item weight, Category diversity, Market reach (Distance), Average Order Value.
+* **Optimal Result (k=7):**
+    * **Clusters 0, 3, 5:** *Local Lightweights* (Light items, low cost, regional sales) - The dominant group.
+    * **Clusters 2, 4:** *National Heavyweights* (Light/Medium items, national reach).
+    * **Clusters 1, 6:** *High-Ticket Local* (High value, bulky items, regional sales).
+
+*(Note: Experiments with k=12 showed excessive fragmentation within the Low-Cost group, so k=7 was selected).*
+
+---
+
+## 4. Business Impact & Applications
+
+Based on the analysis, the system deployed governance tables on **Google BigQuery** and Dashboards on **Looker Studio**:
+
+1.  **Risk Alert View:** Automatically detects Sellers with Score < 40 or Late Rate > 30% for warning/suspension.
+2.  **VIP Program View:** Identifies "National" Sellers with high revenue to propose shipping subsidy strategies.
+3.  **Training Focus View:** Filters Sellers with high GMV but poor operations (Low Review Score) to send automated training materials.
