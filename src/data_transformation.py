@@ -7,8 +7,11 @@ Biến đổi dữ liệu (Tối ưu hóa ELT)
 """
 
 import pandas as pd
+import os
 from sqlalchemy import text
+import config
 from config import get_db_engine, SCHEMA_WAREHOUSE
+from data_loading import upload_to_gcs, load_gcs_to_bigquery, create_bq_dataset
 
 def execute_elt_query(table_name, sql_query):
     """
@@ -98,7 +101,6 @@ def create_dim_customers():
 def create_dim_products():
     """
     Tạo bảng dim_products.
-    CẬP NHẬT: Join với bảng translation từ STAGING thay vì RAW_DATA.
     """
     sql = """
     SELECT 
@@ -154,7 +156,6 @@ def create_fact_order_items():
 def create_fact_orders():
     """
     Tạo bảng Fact chính. 
-    Logic giữ nguyên nhưng thêm ép kiểu để đảm bảo tính toàn vẹn dữ liệu.
     """
     sql = """
     WITH order_totals AS (
@@ -219,34 +220,79 @@ def create_fact_orders():
     """
     return execute_elt_query('fact_orders', sql)
 
+def sync_warehouse_to_cloud(engine):
+    """
+    Hàm này đọc các bảng Fact/Dim vừa tạo xong trong PostgreSQL 
+    và đồng bộ chúng lên BigQuery.
+    """
+    print("\n Bắt đầu đồng bộ Data Warehouse lên Google Cloud...")
+    
+    # Danh sách các bảng trong Warehouse cần đẩy đi
+    warehouse_tables = [
+        "warehouse.fact_orders",
+        "warehouse.fact_order_items",
+        "warehouse.dim_sellers",
+        "warehouse.dim_customers",
+        "warehouse.dim_products"
+    ]
+    
+    # Đảm bảo Dataset tồn tại
+    dataset_name = "olist_analytics"
+    create_bq_dataset(dataset_name)
+
+    for table_full_name in warehouse_tables:
+        try:
+            table_clean_name = table_full_name.split('.')[-1] # Lấy tên dim_sellers
+            csv_name = f"{table_clean_name}.csv"
+            
+            # 1. Extract: Đọc từ Postgres ra
+            df = pd.read_sql(f"SELECT * FROM {table_full_name}", engine)
+            df.to_csv(csv_name, index=False)
+            
+            # 2. Upload: Đẩy lên GCS
+            gcs_path = f"warehouse/{csv_name}"
+            upload_to_gcs(csv_name, gcs_path)
+            
+            # 3. Load: Đẩy vào BigQuery
+            gcs_uri = f"gs://{config.GCS_BUCKET_NAME}/{gcs_path}"
+            load_gcs_to_bigquery(gcs_uri, dataset_name, table_clean_name)
+            
+            # 4. Dọn dẹp file rác
+            if os.path.exists(csv_name):
+                os.remove(csv_name)
+                
+        except Exception as e:
+            print(f"Không thể đồng bộ bảng {table_full_name}: {e}")
+
+
 def run_transformation():
     """Chạy toàn bộ các bước biến đổi dữ liệu"""
     print("BIẾN ĐỔI DỮ LIỆU")
 
-    
     create_warehouse_schema()
     
     stats = {}
     
     # Tạo bảng dimension
-    print("\nTạo bảng Dimension")
+    print("\n Tạo bảng Dimension")
     stats['dim_date'] = create_dim_date()
     stats['dim_customers'] = create_dim_customers()
     stats['dim_products'] = create_dim_products()
     stats['dim_sellers'] = create_dim_sellers()
     
     # Tạo bảng fact
-    print("\nTạo bảng Fact")
-    stats['fact_order_items'] = create_fact_order_items() # Bảng bridge
+    print("\n Tạo bảng Fact")
+    stats['fact_order_items'] = create_fact_order_items()
     stats['fact_orders'] = create_fact_orders()
     
-
-    print("\nTỔNG KẾT BIẾN ĐỔI DỮ LIỆU:")
-
+    print("\n TỔNG KẾT BIẾN ĐỔI DỮ LIỆU:")
     for table, count in stats.items():
         print(f"  {table:30s}: {count:,} dòng")
-    print("\n Quá trình biến đổi dữ liệu đã hoàn thành!\n")
     
+    engine = get_db_engine()
+    sync_warehouse_to_cloud(engine)
+
+    print("\n Quá trình biến đổi & đồng bộ hoàn tất!\n")
     return stats
 
 if __name__ == "__main__":
